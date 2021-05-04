@@ -1,0 +1,451 @@
+# L3_telemetry.py
+# This program grabs data from the onboard sensors and log data in files
+# for NodeRed access and integrate into a custom "flow".
+# Access nodered at 192.168.8.1:1880 (by default, it's running on the Blue)
+
+# Import Internal Programs
+import L2_log as log
+import L2_vector as vector
+import L1_text2speech as speech
+import L2_heading as heading
+import L2_speed_control as sc
+import L2_inverse_kinematics as inv
+import Color_File_Red as myred
+import Color_File_Green as mygreen
+import Color_File_Blue as myblue
+import Color_File_Yellow as myyellow
+import Color_File_White as mywhite
+import Color_File_Orange as myorange
+# Import External programs
+import numpy as np
+import time
+# Run the main loop
+a=50
+n=0
+numberMailbox = 0
+numberLetter = 0
+purpleLetter = 0
+greenLetter = 0
+redLetter = 0
+mail=0
+mailOne=0
+mailTwo=0
+mailThree=0
+sayOne = ""
+sayTwo = ""
+sayThree = ""
+sayFour = ""
+sayFive = ""
+saySix = ""
+saySeven = ""
+sayEight = ""
+
+orange_range = np.array([[10, 85, 200], [20, 255, 255]])  
+green_range = np.array([[75, 90, 85], [90, 255, 255]]) 
+blue_range = np.array([[100, 160, 160], [110, 255, 255]])
+red_range = np.array([[165, 105, 90], [255, 255, 255]])
+yellow_range = np.array([[25, 95, 180], [50, 255, 255]])
+while True:
+    log.uniqueFile(numberMailbox, "Mailbox")
+    log.uniqueFile(greenLetter, "GreenLetter")
+    log.uniqueFile(redLetter, "RedLetter")
+    log.uniqueFile(purpleLetter, "purpleLetter")
+    log.uniqueFile(mailOne, "mailOne")
+    log.uniqueFile(mailTwo, "mailTwo")
+    log.uniqueFile(mailThree, "mailThree")
+    log.uniqueFile(numberLetter, "numberLetter")
+    log.stringTmpFile(sayFour, "sayFour")
+    log.stringTmpFile(sayFive, "sayFive")
+    log.stringTmpFile(saySix, "saySix")
+    log.stringTmpFile(saySeven, "saySeven")
+    log.stringTmpFile(sayEight, "sayEight")
+    log.stringTmpFile(sayOne, "sayOne")
+    log.stringTmpFile(sayTwo, "sayTwo")
+    log.stringTmpFile(sayThree, "sayThree")
+        
+    print("Waiting to Start")
+    while a == 50:
+        yellow = myyellow.colorTarget(orange_range)          # grab target x, y, radius
+        xy = yellow[0]
+        if xy is None:
+            print("Not starting yet")
+            time.sleep(0.5)
+        else:
+            print("Starting in a few seconds")
+            time.sleep(3)  
+            a=1
+    while a == 10:
+        axes = heading.getXY()
+        axesScaled = heading.scale(axes)
+        h = heading.getHeading(axesScaled)
+        headingDegrees = round(h*180/np.pi, 2)
+        print("", headingDegrees)
+        if 180 > headingDegrees > 45:
+            myVelocities = np.array([0,-1.57]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+        if 40> headingDegrees > -180:
+            myVelocities = np.array([0,-1.57]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+        if 45> headingDegrees > 40:
+            myVelocities = np.array([0,0]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+            a=1
+    while a==0:
+        myVelocities = np.array([0,-1.57]) #input your 2nd pair
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.5)
+        a=1
+
+    while a == 1:    
+        print("a=1")
+        near = vector.getNearest()
+        nearDistance = near[0]
+        nearDegree = near[1]
+        values = vector.polar2cart(nearDistance, nearDegree)
+        print("Nearest Distance:", nearDistance, "Nearest Degree:", nearDegree)
+        if -82 < nearDegree < 0 and nearDistance < 0.3:
+                myVelocities = np.array([0,0]) #input your 2nd pair
+                myPhiDots = inv.convert(myVelocities)
+                sc.driveOpenLoop(myPhiDots)
+                time.sleep(0.1) # input your duration (s)
+                a=2
+        else:
+            myVelocities = np.array([1, -0.1]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+            time.sleep(0.1) # input your duration (s)
+            
+    while a==2:
+        print("a=2")
+        whiteTarget = mywhite.white()          # grab target x, y, radius
+        if whiteTarget is None:
+            print("No White")
+        else:
+            print("Detecting White")
+            myVelocities = np.array([0,1.7]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+            time.sleep(1.3)
+            myVelocities = np.array([0,0]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+            time.sleep(1)
+            a=3
+            
+    while a==3:
+        print("a=3")
+        close = 0
+        near = vector.getNearest()
+        nearDistance = near[0]
+        nearDegree = near[1]
+        values = vector.polar2cart(nearDistance, nearDegree)
+        print("Nearest Distance:", nearDistance, "Nearest Degree:", nearDegree)
+        if -82 < nearDegree < 0 and nearDistance < 0.5:
+                myVelocities = np.array([0,0]) #input your 2nd pair
+                myPhiDots = inv.convert(myVelocities)
+                sc.driveOpenLoop(myPhiDots)
+                time.sleep(3) # input your duration (s)
+                a = 4
+        else:
+            myVelocities = np.array([0.4, 0]) #input your 2nd pair
+            myPhiDots = inv.convert(myVelocities)
+            sc.driveOpenLoop(myPhiDots)
+            time.sleep(0.1) # input your duration (s)
+            
+            
+    while a==4:
+        print("a=4")
+        blueLoop = 0
+        readblue = 0
+        while blueLoop < 20:
+            blue = myblue.colorTarget()           # grab target x, y, radius
+            xb = blue[2]
+            bradius = blue[0]
+            if bradius is None:
+                print("No")
+                blueLoop = blueLoop + 1
+        
+            else:
+                blueLoop = blueLoop + 1
+                readblue = readblue + 1
+                print("Yes")
+                
+        if readblue > 10:
+            mail = mail + 1
+            numberMailbox = numberMailbox + 1
+            log.uniqueFile(numberMailbox, "Mailbox")
+            print("Blue Mailbox Found")
+            green = mygreen.colorTarget()           # grab target x, y, radius
+            xg = green[0]
+   
+            if xg is None:
+                print("No Green")
+            
+            else:
+                numberLetter = numberLetter + 1
+                greenLetter = greenLetter + 1
+                log.uniqueFile(greenLetter, "GreenLetter")
+                print("Green Letter Found")
+                    
+            red = myred.colorTarget()           # grab target x, y, radius
+            xr = red[0]
+            if xr is None:
+                print("No Red")
+               
+                    
+            else:
+                numberLetter = numberLetter + 1
+                redLetter = redLetter + 1
+                log.uniqueFile(redLetter, "RedLetter")
+                print("Red Letter Found")
+                    
+            orange = myorange.colorTarget()           # grab target x, y, radius
+            xo = orange[0]
+
+            if xo is None:
+                print("No Purple")
+                
+            else:
+                print("Purple Letter Found")
+                numberLetter = numberLetter + 1
+                purpleLetter = purpleLetter + 1
+                log.uniqueFile(purpleLetter, "purpleLetter")
+            log.uniqueFile(numberLetter, "numberLetter")
+            a=12
+            
+        else:
+            print("No Mailbox Found")
+            a=5
+            
+        
+    while a==5:
+        print("a=4")
+        yellow = myyellow.colorTarget(orange_range)          # grab target x, y, radius
+        xy = yellow[0]
+        if xy is None:
+            print("No Yellow")
+            a=2 
+        else:
+            print("Yellow Found")
+            a=7  
+            
+    while a == 6: 
+        print("a=6")
+        myVelocities = np.array([0,1.60]) # 90 right
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.5)
+        myVelocities = np.array([0,0]) # wait
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.0)
+        myVelocities = np.array([1,0]) # forward
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.5)
+        myVelocities = np.array([0,0]) # wait
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.0)
+        myVelocities = np.array([0,-1.6]) # 90 left
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.5)
+        myVelocities = np.array([0,0]) # wait
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        myVelocities = np.array([1.5,0]) # forward
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(2.6)
+        myVelocities = np.array([0,0]) # wait
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        myVelocities = np.array([0,-1.6]) # 90 left
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.6)
+        myVelocities = np.array([0,0]) #
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(2)
+        a=1
+        
+        
+    while a == 7:
+        print("a=7")
+        myVelocities = np.array([0,0]) #input your 2nd pair
+        myPhiDots = inv.convert(myVelocities)
+        sc.driveOpenLoop(myPhiDots)
+        time.sleep(1.8)
+        a = 13
+        
+            
+            
+    while a==12:
+        print("a=12")
+        if mail == 1:
+            mailOne = numberLetter
+            log.uniqueFile(mailOne, "mailOne")
+        if mail == 2:
+            mailTwo = numberLetter - mailOne
+            log.uniqueFile(mailTwo, "mailTwo")
+        if mail == 3:
+            mailThree = numberLetter - mailOne - mailTwo
+            log.uniqueFile(mailThree, "mailThree")
+        a=6
+    
+    while a==13:
+        print("a=13")
+        if mail == 1:
+            sayFour = "There is one mailbox"
+            a = 14
+        if mail == 2:
+            sayFour = "There are two mailboxes"
+            a=14
+        else:
+            sayFour = "There are three mailboxes"
+            a=14
+            
+    while a==14:   
+        if mailOne == 1:
+            sayOne = "Mailbox one has 1 Letter"
+            a=15
+        if mailOne == 2:
+            sayOne = "Mailbox one has 2 Letters"
+            a=15
+        else:
+            sayOne = "Mailbox one has 3 Letters"
+            a=15
+            
+    while a == 15:      
+        if mailTwo == 1:
+            sayTwo = "Mailbox two has 1 Letter"
+            a == 16
+        if mailTwo == 2:
+            sayTwo = "Mailbox two has 2 Letters"
+            a == 16
+        else:
+            sayTwo = "Mailbox two has 3 Letters"
+            a==16
+            
+    while a == 16:       
+        if mailThree == 1:
+            sayThree = "Mailbox three has 1 Letter"
+            a=17
+        if mailThree == 2:
+            sayThree = "Mailbox three has 2 Letters"
+            a=17
+        else:
+            sayThree = "Mailbox one has 3 Letters"
+            a=17
+            
+    while a == 17:        
+        if numberLetter == 1:
+            sayFive = "There is one Letter"
+            a=18
+        if numberLetter == 2:
+            sayFive = "There are two Letters"
+            a=18
+        if numberLetter == 3:
+            sayFive = "There are three Letters"
+            a=18
+        if numberLetter == 4:
+            sayFive = "There are four Letter"
+            a=18
+        if numberLetter == 5:
+            sayFive = "There are five Letters"
+            a=18
+        if numberLetter == 6:
+            sayFive = "There are six Letters"
+            a=18
+        if numberLetter == 7:
+            sayFive = "There are seven Letter"
+            a=18
+        if numberLetter == 8:
+            sayFive = "There are eight Letters"
+            a=18
+        else:
+            sayFive = "There are nine Letters"
+            a=18
+    
+    while a == 18:    
+        if redLetter == 1:
+            saySix = "There is one red Letter"
+            a=19
+        if redLetter == 2:
+            saySix = "There are two red Letters"
+            a=19
+        else:
+            saySix = "There are three red Letters"
+            a=19
+    
+    while a == 19:        
+        if greenLetter == 1:
+            saySeven = "There is one blue Letter"
+            a = 20
+        if greenLetter == 2:
+            saySeven = "There are two blue Letters"
+            a=20
+        if greenLetter == 3:
+            saySeven = "There are three blue Letters"
+            a=20
+        if purpleLetter == 1:
+            sayEight = "There is one purple Letter"
+            a=20
+        if purpleLetter == 2:
+            sayEight = "There are two purple Letters"
+            a=20
+        else:
+            sayEight = "There are three purple Letters"
+            a=20
+            
+    while a==20:
+        a==21
+        log.stringTmpFile(sayFour, "sayFour")
+        print("What are you doing?")
+        
+    while a==21:
+        a==22
+        print("Say Something")
+        log.stringTmpFile(sayFive, "sayFive")
+        
+        
+    while a==22:
+        a==23
+        print("Say Something 2")
+        log.stringTmpFile(saySix, "saySix")
+        
+        
+    while a==23:
+        log.stringTmpFile(saySeven, "saySeven")
+        a==24
+        
+    while a==24:
+        log.stringTmpFile(sayEight, "sayEight")
+        a==25
+        
+    while a==25:
+        log.stringTmpFile(sayOne, "sayOne")
+        a==26
+        
+    while a==26:
+        log.stringTmpFile(sayTwo, "sayTwo")
+        a==27
+        
+    while a==27:
+        log.stringTmpFile(sayThree, "sayThree")
+        a==28
+            
+
+        
+    
+    
+        
+        #letter = '4'
+        #speaker = speech.say(letter)
+    
